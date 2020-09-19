@@ -9,7 +9,7 @@ class QuestionSerializer(ModelSerializer):
 
 	class Meta:
 		model = Question
-		fields = ['title']
+		fields = ['condition']
 
 
 class TestSerializer(ModelSerializer):
@@ -20,4 +20,4 @@ class TestSerializer(ModelSerializer):
 
 	class Meta:
 		model = Test
-		fields = ['user', 'questions']
+		fields = ['user', 'title', 'description', 'questions']

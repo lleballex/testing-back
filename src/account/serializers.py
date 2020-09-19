@@ -8,7 +8,7 @@ class PublicUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ['username']
+		fields = ['username', 'first_name', 'last_name']
 
 
 class PrivateUserSerializer(serializers.ModelSerializer):
@@ -16,4 +16,4 @@ class PrivateUserSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = User
-		fields = ['username', 'email', 'date_joined']
+		fields = ['username', 'email', 'first_name', 'last_name', 'date_joined']

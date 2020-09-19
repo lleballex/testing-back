@@ -128,7 +128,7 @@ AUTH_USER_MODEL = 'account.User'
 # CORS settings
 
 CORS_ORIGIN_WHITELIST = [
-
+    'http://localhost:8080'
 ]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
@@ -137,3 +137,9 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 
 
 # Rest Framework settings
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'account.authentication.Authentication',
+    ],
+}
