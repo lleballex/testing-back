@@ -1,6 +1,6 @@
 from corsheaders.defaults import default_headers
-
 from pathlib import Path
+from . import config
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'yh9t=+*qt&a@#3crglx#%0%l&ka6&@^6ds^631(_g%2+!z!n3%'
+SECRET_KEY = config.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
