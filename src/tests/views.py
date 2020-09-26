@@ -1,11 +1,40 @@
 from django.http import Http404
 from rest_framework import mixins
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .models import Test
-from .serializers import TestSerializer
 from core.mixins import BaseAPIView
+from .serializers import TestSerializer
 from account.serializers import PublicUserSerializer
+from .serializers import CreateQuestionSerializer, CreateTestSerializer
+
+
+class TestsView(APIView):
+	"""Creating a test"""
+
+	permission_classes = [IsAuthenticatedOrReadOnly]
+
+	def post(self, request):
+		question_serializer = CreateQuestionSerializer(data=request.data['questions'],
+													   many=True)
+		if not question_serializer.is_valid():
+			return Response(question_serializer.errors, status=400)
+		question_serializer.save()
+
+		questions = []
+		for question in question_serializer.data:
+			questions.append(question['id'])
+		request.data['questions'] = questions
+
+		test_serializer = CreateTestSerializer(data=request.data)
+
+		if not test_serializer.is_valid():
+			return Response(test_serializer.errors, status=400)
+		test_serializer.save(user=request.user)
+
+		return Response(test_serializer.data, status=201)
 
 
 class TestView(mixins.RetrieveModelMixin, BaseAPIView):

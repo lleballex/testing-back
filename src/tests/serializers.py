@@ -12,6 +12,14 @@ class QuestionSerializer(ModelSerializer):
 		fields = ['condition']
 
 
+class CreateQuestionSerializer(ModelSerializer):
+	"""Serializer for creating questions"""
+
+	class Meta:
+		model = Question
+		fields = ['id', 'condition', 'answer']
+
+
 class TestSerializer(ModelSerializer):
 	"""Serializer for Test model"""
 
@@ -21,3 +29,11 @@ class TestSerializer(ModelSerializer):
 	class Meta:
 		model = Test
 		fields = ['user', 'title', 'description', 'questions']
+
+
+class CreateTestSerializer(ModelSerializer):
+	"""Serializer for creating tests"""
+
+	class Meta:
+		model = Test
+		fields = ['title', 'description', 'questions']
