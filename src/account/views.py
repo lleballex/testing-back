@@ -1,19 +1,31 @@
+from rest_framework import mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
+from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import SAFE_METHODS
 
 from .models import User
 from .authentication import encode_auth_token
-from .serializers import PrivateUserSerializer
+from .serializers import CreateUserSerializer
+from .serializers import PublicUserSerializer, PrivateUserSerializer
 
 
-class UsersView(APIView):
+class UsersView(mixins.ListModelMixin, mixins.CreateModelMixin, GenericAPIView):
 	"""Getting a list of all users"""
 
+	queryset = User.objects.all()
+
 	def get(self, request):
-		users = User.objects.all()
-		serializer = PrivateUserSerializer(users, many=True)
-		return Response(serializer.data)
+		return self.list(request)
+
+	def post(self, request):
+		return self.create(request)
+
+	def get_serializer_class(self):
+		if self.request.method in SAFE_METHODS:
+			return PublicUserSerializer
+		return CreateUserSerializer
 
 
 class GetTokenView(APIView):
