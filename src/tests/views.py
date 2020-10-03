@@ -1,7 +1,7 @@
 from django.http import Http404
 from rest_framework import mixins
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .models import Test
@@ -11,10 +11,15 @@ from account.serializers import PublicUserSerializer
 from .serializers import CreateQuestionSerializer, CreateTestSerializer
 
 
-class TestsView(APIView):
+class TestsView(mixins.ListModelMixin, GenericAPIView):
 	"""Creating a test"""
 
+	queryset = Test.objects.all()
+	serializer_class = TestSerializer
 	permission_classes = [IsAuthenticatedOrReadOnly]
+
+	def get(self, request):
+		return self.list(request)
 
 	def post(self, request):
 		question_serializer = CreateQuestionSerializer(data=request.data['questions'],
