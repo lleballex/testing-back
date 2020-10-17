@@ -9,7 +9,7 @@ class QuestionSerializer(ModelSerializer):
 
 	class Meta:
 		model = Question
-		fields = ['condition']
+		fields = ['condition', 'answer', 'answer_options', 'answer_type']
 
 
 class CreateQuestionSerializer(ModelSerializer):
@@ -17,7 +17,7 @@ class CreateQuestionSerializer(ModelSerializer):
 
 	class Meta:
 		model = Question
-		fields = ['id', 'condition', 'answer']
+		fields = ['id', 'condition', 'answer', 'answer_type']
 
 
 class TestSerializer(ModelSerializer):
@@ -28,7 +28,8 @@ class TestSerializer(ModelSerializer):
 
 	class Meta:
 		model = Test
-		fields = ['id', 'user', 'title', 'description', 'image', 'questions']
+		fields = ['id', 'user', 'title', 'description',
+				  'image', 'date_created', 'questions']
 
 
 class CreateTestSerializer(ModelSerializer):

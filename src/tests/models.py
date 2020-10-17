@@ -3,9 +3,20 @@ from django.db import models
 from account.models import User
 
 
+ANSWER_TYPE = [
+	('TEXT', 'text'),
+	('NUMBER', 'number'),
+	('CHECKBOXES', 'checkboxes'),
+	('RADIOS', 'radios'),
+]
+
+
 class Question(models.Model):
 	condition = models.TextField()
 	answer = models.CharField(max_length=100)
+	answer_options = models.CharField(max_length=1000, null=True, blank=True)
+	answer_type = models.CharField(max_length=10, choices=ANSWER_TYPE,
+								   default='TEXT')
 
 	def __str__(self):
 		return self.condition[:30]
