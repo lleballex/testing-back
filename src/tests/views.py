@@ -2,31 +2,34 @@ from django.http import Http404
 from rest_framework import mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.core.files.base import ContentFile
-from django.utils.crypto import get_random_string
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from .models import Test
 from core.mixins import BaseAPIView
-from .serializers import TestSerializer
-from account.serializers import PublicUserSerializer
+from core.utils import get_image_from_str
+from .serializers import TestSerializer, BaseTestInfoSerializer
 from .serializers import CreateQuestionSerializer, CreateTestSerializer
-
-from base64 import b64decode
 
 
 class TestsView(mixins.ListModelMixin, GenericAPIView):
-	"""Creating a test"""
+	"""Getting a list of tests and creating a new one"""
 
-	queryset = Test.objects.all()
-	serializer_class = TestSerializer
+	queryset = Test.objects.filter(is_private=False)
+	serializer_class = BaseTestInfoSerializer
 	permission_classes = [IsAuthenticatedOrReadOnly]
 
 	def get(self, request):
 		return self.list(request)
 
 	def post(self, request):
+		for i in range(len(request.data['questions'])):
+			answer_options = ''
+			for answer in request.data['questions'][i]['answer_options']:
+				answer_options += answer + '$&$;'
+			answer_options = answer_options[:len(answer_options) - 4]
+			request.data['questions'][i]['answer_options'] = answer_options
+
 		question_serializer = CreateQuestionSerializer(data=request.data['questions'],
 													   many=True)
 		if not question_serializer.is_valid():
@@ -39,12 +42,7 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 		request.data['questions'] = questions
 
 		if request.data.get('image'):
-			_, img_str = request.data['image'].split('base64,')
-			image_extension = _.split('/')[-1].split(';')[0]
-			img_base64 = b64decode(img_str)
-			image_b = ContentFile(img_base64)
-			image_b.name = get_random_string(length=6) + '.' + image_extension
-			request.data['image'] = image_b
+			request.data['image'] = get_image_from_str(request.data['image'])
 
 		test_serializer = CreateTestSerializer(data=request.data)
 
@@ -66,22 +64,15 @@ class TestView(mixins.RetrieveModelMixin, BaseAPIView):
 		return self.retrieve(request, *args, **kwargs)
 
 
-class TestInfoView(BaseAPIView):
+class TestInfoView(mixins.RetrieveModelMixin, BaseAPIView):
 	"""Getting base info about test"""
 
-	def get(self, request, id):
-		try:
-			test = Test.objects.get(id=id)
-		except Test.DoesNotExist:
-			raise Http404()
+	queryset = Test.objects.all()
+	serializer_class = BaseTestInfoSerializer
+	lookup_field = 'id'
 
-		user_serializer = PublicUserSerializer(test.user)
-
-		return Response({
-			'user': user_serializer.data,
-			'title': test.title,
-			'questions': test.questions.count()
-		})
+	def get(self, request, *args, **kwargs):
+		return self.retrieve(request, *args, **kwargs)
 
 
 class SearchTestsView(APIView):
@@ -92,7 +83,7 @@ class SearchTestsView(APIView):
 		if not text:
 			return Response('Request must have \'text\' parameter', status=400)
 
-		tests = Test.objects.filter(title__icontains=text)
+		tests = Test.objects.filter(is_private=False, title__icontains=text)
 		serializer = TestSerializer(tests, many=True)
 
 		return Response(serializer.data)

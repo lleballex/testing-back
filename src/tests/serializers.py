@@ -5,11 +5,11 @@ from .models import Test, Question
 
 
 class QuestionSerializer(ModelSerializer):
-	"""Serializer for Question model"""
+	"""Serializer for getting questions"""
 
 	class Meta:
 		model = Question
-		fields = ['condition', 'answer', 'answer_options', 'answer_type']
+		fields = ['condition', 'answer_options', 'answer_type']
 
 
 class CreateQuestionSerializer(ModelSerializer):
@@ -17,19 +17,19 @@ class CreateQuestionSerializer(ModelSerializer):
 
 	class Meta:
 		model = Question
-		fields = ['id', 'condition', 'answer', 'answer_type']
+		fields = ['id', 'condition', 'answer', 'answer_type', 'answer_options']
 
 
 class TestSerializer(ModelSerializer):
-	"""Serializer for Test model"""
+	"""Serializer for tests"""
 
 	user = PublicUserSerializer()
 	questions = QuestionSerializer(many=True)
 
 	class Meta:
 		model = Test
-		fields = ['id', 'user', 'title', 'description',
-				  'image', 'date_created', 'questions']
+		fields = ['id', 'user', 'title', 'description', 'image',
+				  'date_created', 'questions', 'is_private', 'need_auth']
 
 
 class CreateTestSerializer(ModelSerializer):
@@ -37,4 +37,16 @@ class CreateTestSerializer(ModelSerializer):
 
 	class Meta:
 		model = Test
-		fields = ['title', 'description', 'image', 'questions']
+		fields = ['title', 'description', 'image',
+				  'questions', 'is_private', 'need_auth']
+
+
+class BaseTestInfoSerializer(ModelSerializer):
+	"""Serializer for base info about a test"""
+
+	user = PublicUserSerializer()
+
+	class Meta:
+		model = Test
+		fields = ['id', 'user', 'title', 'questions',
+				  'is_private', 'need_auth']
