@@ -84,6 +84,11 @@ class SearchTestsView(APIView):
 			return Response('Request must have \'text\' parameter', status=400)
 
 		tests = Test.objects.filter(is_private=False, title__icontains=text)
-		serializer = TestSerializer(tests, many=True)
+
+		sorting = request.query_params.get('sorting')
+		if sorting and sorting == 'old':
+			tests = tests.order_by('date_created')
+
+		serializer = BaseTestInfoSerializer(tests, many=True)
 
 		return Response(serializer.data)

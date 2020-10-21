@@ -1,4 +1,4 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
 from account.serializers import PublicUserSerializer
 from .models import Test, Question
@@ -7,9 +7,14 @@ from .models import Test, Question
 class QuestionSerializer(ModelSerializer):
 	"""Serializer for getting questions"""
 
+	answer_options = SerializerMethodField()
+
 	class Meta:
 		model = Question
 		fields = ['condition', 'answer_options', 'answer_type']
+
+	def get_answer_options(self, obj):
+		return obj.answer_options.split('$&$;')
 
 
 class CreateQuestionSerializer(ModelSerializer):
@@ -45,8 +50,12 @@ class BaseTestInfoSerializer(ModelSerializer):
 	"""Serializer for base info about a test"""
 
 	user = PublicUserSerializer()
+	questions = SerializerMethodField()
 
 	class Meta:
 		model = Test
 		fields = ['id', 'user', 'title', 'questions',
-				  'is_private', 'need_auth']
+				  'is_private', 'need_auth', 'image']
+
+	def get_questions(self, obj):
+		return obj.questions.count()
