@@ -51,3 +51,26 @@ class Test(models.Model):
 
 	def __str__(self):
 		return self.title
+
+
+class SolvedQuestion(models.Model):
+	"""Model for solved question"""
+
+	user_answer = models.CharField(max_length=100)
+	right_answer = models.CharField(max_length=100)
+
+	def __str__(self):
+		return self.user_answer
+
+
+class SolvedTest(models.Model):
+	"""Model for solved test"""
+
+	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solved_tests')
+	test_id = models.IntegerField()
+	title = models.CharField(max_length=100)
+	answers = models.ManyToManyField(SolvedQuestion)
+	right_answers = models.IntegerField(default=0)
+
+	def __str__(self):
+		return self.title

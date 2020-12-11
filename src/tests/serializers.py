@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
 from account.serializers import PublicUserSerializer
-from .models import Test, Question
+from .models import Test, Question, SolvedTest, SolvedQuestion
 
 
 class QuestionSerializer(ModelSerializer):
@@ -59,3 +59,21 @@ class BaseTestInfoSerializer(ModelSerializer):
 
 	def get_questions(self, obj):
 		return obj.questions.count()
+
+
+class SolvedQuestionSerializer(ModelSerializer):
+	"""Serializer for solved question"""
+
+	class Meta:
+		model = SolvedQuestion
+		fields = ['user_answer', 'right_answer']
+
+
+class SolvedTestSerializer(ModelSerializer):
+	"""Serializer for solved tests"""
+
+	answers = SolvedQuestionSerializer(many=True)
+
+	class Meta:
+		model = SolvedTest
+		fields = ['test_id', 'title', 'answers', 'right_answers']

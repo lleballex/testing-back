@@ -4,10 +4,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 
 from .models import Test
 from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
+from .models import SolvedTest, SolvedQuestion
+from .serializers import SolvedTestSerializer
 from .serializers import TestSerializer, BaseTestInfoSerializer
 from .serializers import CreateQuestionSerializer, CreateTestSerializer
 
@@ -53,15 +56,26 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 		return Response(test_serializer.data, status=201)
 
 
-class TestView(mixins.RetrieveModelMixin, BaseAPIView):
+class TestView(BaseAPIView):
 	"""Getting a test by id"""
 
-	queryset = Test.objects.all()
-	lookup_field = 'id'
-	serializer_class = TestSerializer
+	def get(self, request, id):
+		try:
+			test = Test.objects.get(id=id)
+		except Test.DoesNotExist:
+			raise Http404
 
-	def get(self, request, *args, **kwargs):
-		return self.retrieve(request, *args, **kwargs)
+		if request.user.is_authenticated:
+			try:
+				request.user.solved_tests.get(test_id=test.id)
+				return Response({
+					'detail':'You have already solved this test'
+				}, status=403)
+			except SolvedTest.DoesNotExist:
+				pass
+		
+		serializer = TestSerializer(test)
+		return Response(serializer.data)
 
 
 class TestInfoView(mixins.RetrieveModelMixin, BaseAPIView):
@@ -91,4 +105,46 @@ class SearchTestsView(APIView):
 
 		serializer = BaseTestInfoSerializer(tests, many=True)
 
+		return Response(serializer.data)
+
+
+class CheckAnswersView(APIView):
+	"""Checking test answers"""
+
+	def post(self, request, id):
+		try:
+			test = Test.objects.get(id=id)
+		except Test.DoesNotExist:
+			raise Http404
+
+		if test.need_auth and not request.user.is_authenticated:
+			raise PermissionDenied
+
+		right_answers = 0
+		solved_test = SolvedTest.objects.create(user=request.user,
+												test_id=test.id,
+												title=test.title)
+
+		for i in range(len(test.questions.all())):
+			if test.questions.all()[i].answer == request.data['answers'][i]:
+				right_answers += 1
+
+			solved_test.answers.add(SolvedQuestion.objects.create(
+				user_answer = request.data['answers'][i],
+				right_answer = test.questions.all()[i].answer
+			))
+
+		solved_test.right_answers = right_answers
+		solved_test.save()
+
+		serializer = SolvedTestSerializer(solved_test)
+		return Response(serializer.data)
+
+
+class SolvedTestsView(APIView):
+	def get(self, request):
+		if not request.user.is_authenticated:
+			raise NotAuthenticated
+
+		serializer = SolvedTestSerializer(request.user.solved_tests, many=True)
 		return Response(serializer.data)
