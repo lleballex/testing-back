@@ -76,4 +76,4 @@ class SolvedTestSerializer(ModelSerializer):
 
 	class Meta:
 		model = SolvedTest
-		fields = ['test_id', 'title', 'answers', 'right_answers']
+		fields = ['id', 'test_id', 'title', 'answers', 'right_answers']

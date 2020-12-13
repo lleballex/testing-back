@@ -148,3 +148,20 @@ class SolvedTestsView(APIView):
 
 		serializer = SolvedTestSerializer(request.user.solved_tests, many=True)
 		return Response(serializer.data)
+
+
+class SolvedTestView(APIView):
+	def get(self, request, id):
+		if not request.user.is_authenticated:
+			raise NotAuthenticated
+
+		try:
+			test = SolvedTest.objects.get(id=id)
+		except SolvedTest.DoesNotExist:
+			raise Http404
+
+		if not test.user == request.user:
+			raise PermissionDenied
+
+		serializer = SolvedTestSerializer(test)
+		return Response(serializer.data)
