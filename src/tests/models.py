@@ -1,5 +1,6 @@
 from django.db import models
 
+from tags.models import Tag
 from account.models import User
 
 
@@ -9,15 +10,6 @@ ANSWER_TYPE = [
 	('CHECKBOXES', 'checkboxes'),
 	('RADIOS', 'radios'),
 ]
-
-
-class Tag(models.Model):
-	"""Model of teg"""
-
-	title = models.CharField(max_length=100)
-
-	def __str__(self):
-		return self.title
 
 
 class Question(models.Model):
@@ -41,6 +33,7 @@ class Test(models.Model):
 	description = models.TextField(null=True, blank=True)
 	image = models.ImageField(null=True, blank=True, upload_to='%Y/%m/%d/tests/')
 	questions = models.ManyToManyField(Question, related_name='test')
+	solutions = models.IntegerField(default=0)
 	date_created = models.DateTimeField(auto_now_add=True)
 	is_private = models.BooleanField(default=False)
 	need_auth = models.BooleanField(default=True)
@@ -51,6 +44,10 @@ class Test(models.Model):
 
 	def __str__(self):
 		return self.title
+
+	def add_solution(self):
+		self.solutions += 1
+		self.save()
 
 
 class SolvedQuestion(models.Model):

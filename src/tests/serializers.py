@@ -46,6 +46,19 @@ class CreateTestSerializer(ModelSerializer):
 				  'questions', 'is_private', 'need_auth']
 
 
+class OwnTestSerializer(ModelSerializer):
+	"""Serializer for getting own tests"""
+
+	date_created = SerializerMethodField()
+
+	class Meta:
+		model = Test
+		fields = ['id', 'title', 'solutions', 'date_created']
+
+	def get_date_created(self, obj):
+		return obj.date_created.strftime('%d.%m.%y %H:%M')
+
+
 class BaseTestInfoSerializer(ModelSerializer):
 	"""Serializer for base info about a test"""
 
@@ -70,10 +83,23 @@ class SolvedQuestionSerializer(ModelSerializer):
 
 
 class SolvedTestSerializer(ModelSerializer):
-	"""Serializer for solved tests"""
+	"""Serializer for only one solved test"""
 
 	answers = SolvedQuestionSerializer(many=True)
 
 	class Meta:
 		model = SolvedTest
+		fields = ['title', 'answers', 'right_answers']
+
+
+class SolvedTestsSerializer(ModelSerializer):
+	"""Serializer for many solved tests"""
+
+	answers = SerializerMethodField()
+
+	class Meta:
+		model = SolvedTest
 		fields = ['id', 'test_id', 'title', 'answers', 'right_answers']
+
+	def get_answers(self, obj):
+		return obj.answers.count();

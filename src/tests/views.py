@@ -9,9 +9,10 @@ from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from .models import Test
 from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
+from .serializers import OwnTestSerializer
 from .models import SolvedTest, SolvedQuestion
-from .serializers import SolvedTestSerializer
 from .serializers import TestSerializer, BaseTestInfoSerializer
+from .serializers import SolvedTestSerializer, SolvedTestsSerializer
 from .serializers import CreateQuestionSerializer, CreateTestSerializer
 
 
@@ -89,25 +90,6 @@ class TestInfoView(mixins.RetrieveModelMixin, BaseAPIView):
 		return self.retrieve(request, *args, **kwargs)
 
 
-class SearchTestsView(APIView):
-	"""Searching tests"""
-
-	def get(self, request):
-		text = request.query_params.get('text')
-		if not text:
-			return Response('Request must have \'text\' parameter', status=400)
-
-		tests = Test.objects.filter(is_private=False, title__icontains=text)
-
-		sorting = request.query_params.get('sorting')
-		if sorting and sorting == 'old':
-			tests = tests.order_by('date_created')
-
-		serializer = BaseTestInfoSerializer(tests, many=True)
-
-		return Response(serializer.data)
-
-
 class CheckAnswersView(APIView):
 	"""Checking test answers"""
 
@@ -136,21 +118,25 @@ class CheckAnswersView(APIView):
 
 		solved_test.right_answers = right_answers
 		solved_test.save()
+		test.add_solution()
 
-		serializer = SolvedTestSerializer(solved_test)
-		return Response(serializer.data)
+		return Response(solved_test.id)
 
 
 class SolvedTestsView(APIView):
+	"""Getting a list of solved tests"""
+
 	def get(self, request):
 		if not request.user.is_authenticated:
 			raise NotAuthenticated
 
-		serializer = SolvedTestSerializer(request.user.solved_tests, many=True)
+		serializer = SolvedTestsSerializer(request.user.solved_tests, many=True)
 		return Response(serializer.data)
 
 
 class SolvedTestView(APIView):
+	"""Getting solved test by id"""
+
 	def get(self, request, id):
 		if not request.user.is_authenticated:
 			raise NotAuthenticated
@@ -164,4 +150,34 @@ class SolvedTestView(APIView):
 			raise PermissionDenied
 
 		serializer = SolvedTestSerializer(test)
+		return Response(serializer.data)
+
+
+class OwnTestsView(APIView):
+	"""Getting a list of own tests"""
+
+	def get(self, request):
+		if not request.user.is_authenticated:
+			raise NotAuthenticated
+
+		serializer = OwnTestSerializer(request.user.tests, many=True)
+		return Response(serializer.data)
+
+
+class SearchTestsView(APIView):
+	"""Searching tests"""
+
+	def get(self, request):
+		text = request.query_params.get('text')
+		if not text:
+			return Response('Request must have \'text\' parameter', status=400)
+
+		tests = Test.objects.filter(is_private=False, title__icontains=text)
+
+		sorting = request.query_params.get('sorting')
+		if sorting and sorting == 'old':
+			tests = tests.order_by('date_created')
+
+		serializer = BaseTestInfoSerializer(tests, many=True)
+
 		return Response(serializer.data)
