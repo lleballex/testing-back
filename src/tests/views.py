@@ -134,7 +134,7 @@ class SolvedTestsView(APIView):
 		return Response(serializer.data)
 
 
-class SolvedTestView(APIView):
+class SolvedTestView(BaseAPIView):
 	"""Getting solved test by id"""
 
 	def get(self, request, id):

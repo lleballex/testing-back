@@ -27,12 +27,10 @@ class Authentication(BaseAuthentication):
 		auth_token = request.META.get('HTTP_AUTH_TOKEN')
 
 		if not auth_token:
-			print('No token')
 			return None
 
 		user_id = decode_auth_token(auth_token)
 		if not user_id:
-			print('Not authenticated')
 			raise AuthenticationFailed('Token is invalid or expired')
 
 		try:
