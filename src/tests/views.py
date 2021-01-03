@@ -9,9 +9,9 @@ from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from .models import Test
 from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
-from .serializers import OwnTestSerializer
 from .models import SolvedTest, SolvedQuestion
 from .serializers import TestSerializer, BaseTestInfoSerializer
+from .serializers import OwnTestSerializer, TestSolutionSerializer
 from .serializers import SolvedTestSerializer, SolvedTestsSerializer
 from .serializers import CreateQuestionSerializer, CreateTestSerializer
 
@@ -24,6 +24,10 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 	permission_classes = [IsAuthenticatedOrReadOnly]
 
 	def get(self, request):
+		sorting = request.query_params.get('sorting')
+		if sorting and sorting == 'old':
+			self.queryset = self.queryset.order_by('date_created')
+
 		return self.list(request)
 
 	def post(self, request):
@@ -161,6 +165,26 @@ class OwnTestsView(APIView):
 			raise NotAuthenticated
 
 		serializer = OwnTestSerializer(request.user.tests, many=True)
+		return Response(serializer.data)
+
+
+class OwnTestView(APIView):
+	"""Getting solutions of own test"""
+
+	def get(self, request, id):
+		if not request.user.is_authenticated:
+			raise NotAuthenticated
+
+		try:
+			test = Test.objects.get(id=id)
+		except Test.DoesNotExist:
+			raise Http404
+
+		if not test.user == request.user:
+			raise PermissionDenied
+
+		serializer = TestSolutionSerializer(SolvedTest.objects.filter(test_id=test.id),
+											many=True)
 		return Response(serializer.data)
 
 

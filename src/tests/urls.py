@@ -1,8 +1,9 @@
 from django.urls import path
 
-from .views import SolvedTestsView, SolvedTestView, OwnTestsView
-from .views import TestsView, TestView, TestInfoView, CheckAnswersView
 from .views import SearchTestsView
+from .views import OwnTestsView, OwnTestView
+from .views import SolvedTestsView, SolvedTestView
+from .views import TestsView, TestView, TestInfoView, CheckAnswersView
 
 
 urlpatterns = [
@@ -13,5 +14,6 @@ urlpatterns = [
 	path('solved/', SolvedTestsView.as_view(), name='solved_tests'),
 	path('solved/<int:id>/', SolvedTestView.as_view(), name='solved_test'),
 	path('own/', OwnTestsView.as_view(), name='own_tests'),
+	path('own/<int:id>/', OwnTestView.as_view(), name='own_test'),
 	path('search/', SearchTestsView.as_view(), name='search'),
 ]

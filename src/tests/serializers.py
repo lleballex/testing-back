@@ -103,3 +103,16 @@ class SolvedTestsSerializer(ModelSerializer):
 
 	def get_answers(self, obj):
 		return obj.answers.count();
+
+
+class TestSolutionSerializer(ModelSerializer):
+	"""Serializer for solutions of test"""
+
+	user = SerializerMethodField()
+
+	class Meta:
+		model = SolvedTest
+		fields = ['user', 'answers', 'right_answers']
+
+	def get_user(self, obj):
+		return obj.user.username
