@@ -104,15 +104,21 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'  #en-us
 
 TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
+
+
+###
+#import locale
+#locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+###
 
 
 # Static files (CSS, JavaScript, Images)

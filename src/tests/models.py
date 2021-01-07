@@ -68,6 +68,8 @@ class SolvedTest(models.Model):
 	title = models.CharField(max_length=100)
 	answers = models.ManyToManyField(SolvedQuestion)
 	right_answers = models.IntegerField(default=0)
+	start_date = models.DateTimeField()
+	end_date = models.DateTimeField()
 
 	def __str__(self):
 		return self.title

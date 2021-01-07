@@ -15,6 +15,8 @@ from .serializers import OwnTestSerializer, TestSolutionSerializer
 from .serializers import SolvedTestSerializer, SolvedTestsSerializer
 from .serializers import CreateQuestionSerializer, CreateTestSerializer
 
+from datetime import datetime
+
 
 class TestsView(mixins.ListModelMixin, GenericAPIView):
 	"""Getting a list of tests and creating a new one"""
@@ -107,9 +109,13 @@ class CheckAnswersView(APIView):
 			raise PermissionDenied
 
 		right_answers = 0
+		start_date = datetime.fromtimestamp(request.data['start_date'] / 1000.0)
+		end_date = datetime.fromtimestamp(request.data['end_date'] / 1000.0)
 		solved_test = SolvedTest.objects.create(user=request.user,
 												test_id=test.id,
-												title=test.title)
+												title=test.title,
+												start_date=start_date,
+												end_date=end_date)
 
 		for i in range(len(test.questions.all())):
 			if test.questions.all()[i].answer == request.data['answers'][i]:

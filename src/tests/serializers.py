@@ -64,14 +64,18 @@ class BaseTestInfoSerializer(ModelSerializer):
 
 	user = PublicUserSerializer()
 	questions = SerializerMethodField()
+	date_created = SerializerMethodField()
 
 	class Meta:
 		model = Test
 		fields = ['id', 'user', 'title', 'questions',
-				  'is_private', 'need_auth', 'image']
+				  'is_private', 'need_auth', 'image', 'date_created']
 
 	def get_questions(self, obj):
 		return obj.questions.count()
+
+	def get_date_created(self, obj):
+		return obj.date_created.strftime('%#d %B')
 
 
 class SolvedQuestionSerializer(ModelSerializer):
@@ -109,10 +113,18 @@ class TestSolutionSerializer(ModelSerializer):
 	"""Serializer for solutions of test"""
 
 	user = SerializerMethodField()
+	start_date = SerializerMethodField()
+	end_date = SerializerMethodField()
 
 	class Meta:
 		model = SolvedTest
-		fields = ['user', 'answers', 'right_answers']
+		fields = ['user', 'answers', 'right_answers', 'start_date', 'end_date']
 
 	def get_user(self, obj):
 		return obj.user.username
+
+	def get_start_date(self, obj):
+		return obj.start_date.strftime('%d.%m.%y %H:%M')
+
+	def get_end_date(self, obj):
+		return obj.end_date.strftime('%d.%m.%y %H:%M')
