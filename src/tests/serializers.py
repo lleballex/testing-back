@@ -43,7 +43,7 @@ class CreateTestSerializer(ModelSerializer):
 	class Meta:
 		model = Test
 		fields = ['title', 'description', 'image',
-				  'questions', 'is_private', 'need_auth']
+				  'questions', 'is_private', 'need_auth', 'tags']
 
 
 class OwnTestSerializer(ModelSerializer):
@@ -63,13 +63,17 @@ class BaseTestInfoSerializer(ModelSerializer):
 	"""Serializer for base info about a test"""
 
 	user = PublicUserSerializer()
+	tags = SerializerMethodField()
 	questions = SerializerMethodField()
 	date_created = SerializerMethodField()
 
 	class Meta:
 		model = Test
-		fields = ['id', 'user', 'title', 'questions',
+		fields = ['id', 'user', 'title', 'questions', 'tags',
 				  'is_private', 'need_auth', 'image', 'date_created']
+
+	def get_tags(self, obj):
+		return [tag.tag for tag in obj.tags.all()]
 
 	def get_questions(self, obj):
 		return obj.questions.count()

@@ -26,6 +26,15 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 	permission_classes = [IsAuthenticatedOrReadOnly]
 
 	def get(self, request):
+		query = request.query_params.get('query')
+		if query:
+			self.queryset = self.queryset.filter(title__icontains=query)
+
+		tags = request.query_params.get('tags')
+		if tags:
+			for tag in tags.split(','):
+				self.queryset = self.queryset.filter(tags__id=int(tag))
+
 		sorting = request.query_params.get('sorting')
 		if sorting and sorting == 'old':
 			self.queryset = self.queryset.order_by('date_created')
@@ -191,23 +200,8 @@ class OwnTestView(APIView):
 
 		serializer = TestSolutionSerializer(SolvedTest.objects.filter(test_id=test.id),
 											many=True)
-		return Response(serializer.data)
-
-
-class SearchTestsView(APIView):
-	"""Searching tests"""
-
-	def get(self, request):
-		text = request.query_params.get('text')
-		if not text:
-			return Response('Request must have \'text\' parameter', status=400)
-
-		tests = Test.objects.filter(is_private=False, title__icontains=text)
-
-		sorting = request.query_params.get('sorting')
-		if sorting and sorting == 'old':
-			tests = tests.order_by('date_created')
-
-		serializer = BaseTestInfoSerializer(tests, many=True)
-
-		return Response(serializer.data)
+		return Response({
+			'title': test.title,
+			'date_created': test.date_created.strftime('%d.%m.%y %H:%M'),
+			'solutions': serializer.data,
+		})

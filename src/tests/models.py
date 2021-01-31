@@ -37,7 +37,7 @@ class Test(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	is_private = models.BooleanField(default=False)
 	need_auth = models.BooleanField(default=True)
-	tags = models.ManyToManyField(Tag, related_name='tests')
+	tags = models.ManyToManyField(Tag, related_name='tests', null=True, blank=True)
 
 	class Meta:
 		ordering = ['-date_created']
@@ -73,3 +73,6 @@ class SolvedTest(models.Model):
 
 	def __str__(self):
 		return self.title
+
+	class Meta:
+		ordering = ['-end_date']
