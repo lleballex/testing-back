@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 
 from .models import User
+from tests.models import Test
 
 
 class PublicUserSerializer(serializers.ModelSerializer):
@@ -57,3 +58,11 @@ class CreateUserSerializer(serializers.ModelSerializer):
 		with transaction.atomic():
 			user = User.objects.create_user(**validated_data)
 		return user
+
+
+class UserTestSerializer(serializers.ModelSerializer):
+	"""Serializer for tests of user"""
+
+	class Meta:
+		model = Test
+		fields = ['id', 'title']

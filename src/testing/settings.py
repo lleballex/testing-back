@@ -104,7 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'ru-RU'  #en-us
+LANGUAGE_CODE = 'en-us'  #ru-RU
 
 TIME_ZONE = 'Europe/Moscow'
 
@@ -141,7 +141,7 @@ AUTH_USER_MODEL = 'account.User'
 # CORS settings
 
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:8080'
+    'http://localhost:8080',
 ]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
