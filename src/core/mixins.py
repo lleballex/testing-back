@@ -2,6 +2,7 @@ from django.http import Http404
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import GenericAPIView
+from rest_framework.exceptions import PermissionDenied
 
 
 class BaseAPIView(GenericAPIView):
@@ -33,3 +34,6 @@ class BaseAPIView(GenericAPIView):
 
 		self.response = self.finalize_response(request, response, *args, **kwargs)
 		return self.response
+
+	def permission_denied(self, request, message=None, code=None):
+		raise PermissionDenied(detail=message, code=code)

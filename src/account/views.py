@@ -9,8 +9,9 @@ from rest_framework.exceptions import PermissionDenied
 
 from .models import User
 from core.mixins import BaseAPIView
-from .serializers import UserTestSerializer
+from .permissions import IsOwnerOrReadOnly
 from .authentication import encode_auth_token, decode_auth_token
+from .serializers import UserTestSerializer, PrivateUserSerializer
 from .serializers import PublicUserSerializer, CreateUserSerializer
 
 
@@ -28,12 +29,13 @@ class UsersView(mixins.CreateModelMixin, GenericAPIView):
 		return CreateUserSerializer
 
 
-class UserView(BaseAPIView):
+class UserView(mixins.UpdateModelMixin, BaseAPIView):
 	"""Getting user data"""
 
 	queryset = User.objects.all()
-	serializer_class = PublicUserSerializer
+	serializer_class = PrivateUserSerializer
 	lookup_field = 'username'
+	permission_classes = [IsOwnerOrReadOnly]
 
 	def get(self, request, username):
 		try:
@@ -64,6 +66,9 @@ class UserView(BaseAPIView):
 			'image': '',
 			**extra_data
 		})
+
+	def put(self, request, username):
+		return self.update(request, username)
 
 
 class GetTokenView(APIView):
