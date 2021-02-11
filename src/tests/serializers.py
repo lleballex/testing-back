@@ -119,6 +119,7 @@ class TestSolutionSerializer(ModelSerializer):
 	user = SerializerMethodField()
 	start_date = SerializerMethodField()
 	end_date = SerializerMethodField()
+	answers = SolvedQuestionSerializer(many=True)
 
 	class Meta:
 		model = SolvedTest
