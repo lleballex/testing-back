@@ -10,6 +10,7 @@ from .models import Test
 from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
 from .models import SolvedTest, SolvedQuestion
+from rating.mixins import LikeMixin, DislikeMixin
 from .serializers import TestSerializer, BaseTestInfoSerializer
 from .serializers import OwnTestSerializer, TestSolutionSerializer
 from .serializers import SolvedTestSerializer, SolvedTestsSerializer
@@ -140,6 +141,16 @@ class CheckAnswersView(APIView):
 		test.add_solution()
 
 		return Response(solved_test.id)
+
+
+class LikeView(LikeMixin):
+	queryset = Test.objects.all()
+	lookup_field = 'id'
+
+
+class DislikeView(DislikeMixin):
+	queryset = Test.objects.all()
+	lookup_field = 'id'
 
 
 class SolvedTestsView(APIView):

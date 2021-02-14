@@ -5,7 +5,7 @@ from .models import Test, Question, SolvedTest, SolvedQuestion
 
 
 class QuestionSerializer(ModelSerializer):
-	"""Serializer for getting questions"""
+	"""Serializer of question"""
 
 	answer_options = SerializerMethodField()
 
@@ -18,7 +18,7 @@ class QuestionSerializer(ModelSerializer):
 
 
 class CreateQuestionSerializer(ModelSerializer):
-	"""Serializer for creating questions"""
+	"""Serializer for creating question"""
 
 	class Meta:
 		model = Question
@@ -26,7 +26,7 @@ class CreateQuestionSerializer(ModelSerializer):
 
 
 class TestSerializer(ModelSerializer):
-	"""Serializer for tests"""
+	"""Serializer of test"""
 
 	user = PublicUserSerializer()
 	questions = QuestionSerializer(many=True)
@@ -38,7 +38,7 @@ class TestSerializer(ModelSerializer):
 
 
 class CreateTestSerializer(ModelSerializer):
-	"""Serializer for creating tests"""
+	"""Serializer for creating test"""
 
 	class Meta:
 		model = Test
@@ -47,7 +47,7 @@ class CreateTestSerializer(ModelSerializer):
 
 
 class OwnTestSerializer(ModelSerializer):
-	"""Serializer for getting own tests"""
+	"""Serializer of own test"""
 
 	date_created = SerializerMethodField()
 
@@ -60,7 +60,7 @@ class OwnTestSerializer(ModelSerializer):
 
 
 class BaseTestInfoSerializer(ModelSerializer):
-	"""Serializer for base info about a test"""
+	"""Serializer of base info about test"""
 
 	user = PublicUserSerializer()
 	tags = SerializerMethodField()
@@ -83,7 +83,7 @@ class BaseTestInfoSerializer(ModelSerializer):
 
 
 class SolvedQuestionSerializer(ModelSerializer):
-	"""Serializer for solved question"""
+	"""Serializer of solved question"""
 
 	class Meta:
 		model = SolvedQuestion
@@ -91,7 +91,7 @@ class SolvedQuestionSerializer(ModelSerializer):
 
 
 class SolvedTestSerializer(ModelSerializer):
-	"""Serializer for only one solved test"""
+	"""Serializer of own test solution"""
 
 	answers = SolvedQuestionSerializer(many=True)
 
@@ -101,7 +101,7 @@ class SolvedTestSerializer(ModelSerializer):
 
 
 class SolvedTestsSerializer(ModelSerializer):
-	"""Serializer for many solved tests"""
+	"""Serializer of solved test"""
 
 	answers = SerializerMethodField()
 
@@ -114,7 +114,7 @@ class SolvedTestsSerializer(ModelSerializer):
 
 
 class TestSolutionSerializer(ModelSerializer):
-	"""Serializer for solutions of test"""
+	"""Serializer of test solution"""
 
 	user = SerializerMethodField()
 	start_date = SerializerMethodField()

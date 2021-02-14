@@ -2,6 +2,7 @@ from django.db import models
 
 from tags.models import Tag
 from account.models import User
+from rating.models import RatingModel
 
 
 ANSWER_TYPE = [
@@ -25,7 +26,7 @@ class Question(models.Model):
 		return self.condition[:30]
 
 
-class Test(models.Model):
+class Test(RatingModel, models.Model):
 	"""Model of test"""
 
 	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tests')
@@ -37,7 +38,7 @@ class Test(models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	is_private = models.BooleanField(default=False)
 	need_auth = models.BooleanField(default=True)
-	tags = models.ManyToManyField(Tag, related_name='tests', null=True, blank=True)
+	tags = models.ManyToManyField(Tag, related_name='tests')
 
 	class Meta:
 		ordering = ['-date_created']
@@ -51,7 +52,7 @@ class Test(models.Model):
 
 
 class SolvedQuestion(models.Model):
-	"""Model for solved question"""
+	"""Model of solved question"""
 
 	user_answer = models.CharField(max_length=100)
 	right_answer = models.CharField(max_length=100)
@@ -61,7 +62,7 @@ class SolvedQuestion(models.Model):
 
 
 class SolvedTest(models.Model):
-	"""Model for solved test"""
+	"""Model of solved test"""
 
 	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solved_tests')
 	test_id = models.IntegerField()

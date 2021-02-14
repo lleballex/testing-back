@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'account',
+    'rating',
     'tests',
     'tags',
 ]
