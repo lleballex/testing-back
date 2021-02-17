@@ -38,7 +38,7 @@ class Test(RatingModel, models.Model):
 	date_created = models.DateTimeField(auto_now_add=True)
 	is_private = models.BooleanField(default=False)
 	need_auth = models.BooleanField(default=True)
-	tags = models.ManyToManyField(Tag, related_name='tests')
+	tags = models.ManyToManyField(Tag, blank=True, related_name='tests')
 
 	class Meta:
 		ordering = ['-date_created']
