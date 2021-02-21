@@ -34,8 +34,8 @@ class TestSerializer(ModelSerializer):
 	class Meta:
 		model = Test
 		fields = ['id', 'user', 'title', 'description', 'image',
-				  'date_created', 'questions', 'is_private', 'need_auth']
-
+				  'date_created', 'questions', 'is_private', 'need_auth',
+				  'rating']
 
 class CreateTestSerializer(ModelSerializer):
 	"""Serializer for creating test"""

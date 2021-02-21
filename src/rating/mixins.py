@@ -21,7 +21,10 @@ class LikeMixin(BaseAPIView):
 			obj.rating += 1
 
 		obj.save()
-		return Response(obj.rating)
+		return Response({
+			'rating': obj.rating,
+			'user_exists': bool(obj.liked_users.filter(id=request.user.id)),
+		})
 
 
 class DislikeMixin(BaseAPIView):
@@ -41,4 +44,7 @@ class DislikeMixin(BaseAPIView):
 			obj.rating -= 1
 
 		obj.save()
-		return Response(obj.rating)
+		return Response({
+			'rating': obj.rating,
+			'user_exists': bool(obj.disliked_users.filter(id=request.user.id)),
+		})

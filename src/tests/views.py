@@ -92,7 +92,11 @@ class TestView(BaseAPIView):
 				pass
 		
 		serializer = TestSerializer(test)
-		return Response(serializer.data)
+		return Response({
+			**serializer.data,
+			'is_liked_user': bool(test.liked_users.filter(id=request.user.id)),
+			'is_disliked_user': bool(test.disliked_users.filter(id=request.user.id)),
+		})
 
 
 class TestInfoView(mixins.RetrieveModelMixin, BaseAPIView):
