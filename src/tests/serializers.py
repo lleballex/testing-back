@@ -66,11 +66,14 @@ class BaseTestInfoSerializer(ModelSerializer):
 	tags = SerializerMethodField()
 	questions = SerializerMethodField()
 	date_created = SerializerMethodField()
+	is_liked_user = SerializerMethodField()
+	is_disliked_user = SerializerMethodField()
 
 	class Meta:
 		model = Test
 		fields = ['id', 'user', 'title', 'questions', 'tags',
-				  'is_private', 'need_auth', 'image', 'date_created']
+				  'is_private', 'need_auth', 'image', 'date_created',
+				  'rating', 'is_liked_user', 'is_disliked_user']
 
 	def get_tags(self, obj):
 		return [tag.tag for tag in obj.tags.all()]
@@ -80,6 +83,12 @@ class BaseTestInfoSerializer(ModelSerializer):
 
 	def get_date_created(self, obj):
 		return obj.date_created.strftime('%#d %B')
+
+	def get_is_liked_user(self, obj):
+		return bool(obj.liked_users.filter(id=self.context['request'].user.id))
+
+	def get_is_disliked_user(self, obj):
+		return bool(obj.disliked_users.filter(id=self.context['request'].user.id))
 
 
 class SolvedQuestionSerializer(ModelSerializer):
