@@ -49,11 +49,16 @@ class CreateTestSerializer(ModelSerializer):
 class OwnTestSerializer(ModelSerializer):
 	"""Serializer of own test"""
 
+	tags = SerializerMethodField()
 	date_created = SerializerMethodField()
 
 	class Meta:
 		model = Test
-		fields = ['id', 'title', 'solutions', 'date_created']
+		fields = ['id', 'title', 'solutions', 'date_created',
+				  'tags', 'image', 'rating']
+
+	def get_tags(self, obj):
+		return [tag.tag for tag in obj.tags.all()]
 
 	def get_date_created(self, obj):
 		return obj.date_created.strftime('%d.%m.%y %H:%M')

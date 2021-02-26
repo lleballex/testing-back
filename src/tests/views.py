@@ -10,6 +10,7 @@ from .models import Test
 from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
 from .models import SolvedTest, SolvedQuestion
+from core.permissions import IsOwnerOrReadOnly
 from rating.mixins import LikeMixin, DislikeMixin
 from .serializers import TestSerializer, BaseTestInfoSerializer
 from .serializers import OwnTestSerializer, TestSolutionSerializer
@@ -73,8 +74,12 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 		return Response(test_serializer.data, status=201)
 
 
-class TestView(BaseAPIView):
-	"""Getting a test by id"""
+class TestView(mixins.DestroyModelMixin, BaseAPIView):
+	"""Getting and deleting a test"""
+
+	queryset = Test.objects.all()
+	lookup_field = 'id'
+	permission_classes = [IsOwnerOrReadOnly]
 
 	def get(self, request, id):
 		try:
@@ -97,6 +102,9 @@ class TestView(BaseAPIView):
 			'is_liked_user': bool(test.liked_users.filter(id=request.user.id)),
 			'is_disliked_user': bool(test.disliked_users.filter(id=request.user.id)),
 		})
+
+	def delete(self, request, id):
+		return self.destroy(request, id)
 
 
 class TestInfoView(mixins.RetrieveModelMixin, BaseAPIView):
@@ -217,6 +225,7 @@ class OwnTestView(APIView):
 											many=True)
 		return Response({
 			'title': test.title,
+			'rating': test.rating,
 			'date_created': test.date_created.strftime('%d.%m.%y %H:%M'),
 			'solutions': serializer.data,
 		})
