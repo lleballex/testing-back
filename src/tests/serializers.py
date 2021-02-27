@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
+from rating.serializers import RatingSerializer
 from account.serializers import PublicUserSerializer
 from .models import Test, Question, SolvedTest, SolvedQuestion
 
@@ -25,7 +26,7 @@ class CreateQuestionSerializer(ModelSerializer):
 		fields = ['id', 'condition', 'answer', 'answer_type', 'answer_options']
 
 
-class TestSerializer(ModelSerializer):
+class TestSerializer(RatingSerializer, ModelSerializer):
 	"""Serializer of test"""
 
 	user = PublicUserSerializer()
@@ -35,7 +36,8 @@ class TestSerializer(ModelSerializer):
 		model = Test
 		fields = ['id', 'user', 'title', 'description', 'image',
 				  'date_created', 'questions', 'is_private', 'need_auth',
-				  'rating']
+				  'rating', 'is_liked_user', 'is_disliked_user']
+
 
 class CreateTestSerializer(ModelSerializer):
 	"""Serializer for creating test"""
@@ -64,15 +66,13 @@ class OwnTestSerializer(ModelSerializer):
 		return obj.date_created.strftime('%d.%m.%y %H:%M')
 
 
-class BaseTestInfoSerializer(ModelSerializer):
+class BaseTestInfoSerializer(RatingSerializer, ModelSerializer):
 	"""Serializer of base info about test"""
 
 	user = PublicUserSerializer()
 	tags = SerializerMethodField()
 	questions = SerializerMethodField()
 	date_created = SerializerMethodField()
-	is_liked_user = SerializerMethodField()
-	is_disliked_user = SerializerMethodField()
 
 	class Meta:
 		model = Test
@@ -88,12 +88,6 @@ class BaseTestInfoSerializer(ModelSerializer):
 
 	def get_date_created(self, obj):
 		return obj.date_created.strftime('%#d %B')
-
-	def get_is_liked_user(self, obj):
-		return bool(obj.liked_users.filter(id=self.context['request'].user.id))
-
-	def get_is_disliked_user(self, obj):
-		return bool(obj.disliked_users.filter(id=self.context['request'].user.id))
 
 
 class SolvedQuestionSerializer(ModelSerializer):

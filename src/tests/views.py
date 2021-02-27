@@ -11,6 +11,7 @@ from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
 from .models import SolvedTest, SolvedQuestion
 from core.permissions import IsOwnerOrReadOnly
+from .permissions import UnsolvedTestsPermission
 from rating.mixins import LikeMixin, DislikeMixin
 from .serializers import TestSerializer, BaseTestInfoSerializer
 from .serializers import OwnTestSerializer, TestSolutionSerializer
@@ -74,34 +75,17 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 		return Response(test_serializer.data, status=201)
 
 
-class TestView(mixins.DestroyModelMixin, BaseAPIView):
+class TestView(mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
+			   BaseAPIView):
 	"""Getting and deleting a test"""
 
 	queryset = Test.objects.all()
 	lookup_field = 'id'
-	permission_classes = [IsOwnerOrReadOnly]
+	permission_classes = [UnsolvedTestsPermission, IsOwnerOrReadOnly]
+	serializer_class = TestSerializer
 
 	def get(self, request, id):
-		try:
-			test = Test.objects.get(id=id)
-		except Test.DoesNotExist:
-			raise Http404
-
-		if request.user.is_authenticated:
-			try:
-				request.user.solved_tests.get(test_id=test.id)
-				return Response({
-					'detail':'You have already solved this test'
-				}, status=403)
-			except SolvedTest.DoesNotExist:
-				pass
-		
-		serializer = TestSerializer(test)
-		return Response({
-			**serializer.data,
-			'is_liked_user': bool(test.liked_users.filter(id=request.user.id)),
-			'is_disliked_user': bool(test.disliked_users.filter(id=request.user.id)),
-		})
+		return self.retrieve(request, id)
 
 	def delete(self, request, id):
 		return self.destroy(request, id)
