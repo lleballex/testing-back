@@ -3,12 +3,14 @@ from rest_framework import mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 
 from .models import Test
 from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
+from .serializers import UpdateTestSerializer
 from .models import SolvedTest, SolvedQuestion
 from core.permissions import IsOwnerOrReadOnly
 from .permissions import UnsolvedTestsPermission
@@ -75,20 +77,32 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 		return Response(test_serializer.data, status=201)
 
 
-class TestView(mixins.RetrieveModelMixin, mixins.DestroyModelMixin,
-			   BaseAPIView):
+class TestView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+			   mixins.DestroyModelMixin, BaseAPIView):
 	"""Getting and deleting a test"""
 
 	queryset = Test.objects.all()
 	lookup_field = 'id'
 	permission_classes = [UnsolvedTestsPermission, IsOwnerOrReadOnly]
-	serializer_class = TestSerializer
 
 	def get(self, request, id):
 		return self.retrieve(request, id)
 
+	def post(self, request, id):
+		return self.retrieve(request, id)
+
+	def put(self, request, id):
+		if request.data.get('image'):
+			request.data['image'] = get_image_from_str(request.data['image'])
+		return self.partial_update(request, id)
+
 	def delete(self, request, id):
 		return self.destroy(request, id)
+
+	def get_serializer_class(self):
+		if self.request.method in SAFE_METHODS:
+			return TestSerializer
+		return UpdateTestSerializer
 
 
 class TestInfoView(mixins.RetrieveModelMixin, BaseAPIView):

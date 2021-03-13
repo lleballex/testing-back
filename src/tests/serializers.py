@@ -1,5 +1,7 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 
+from tags.models import Tag
+from tags.serializers import TagSerializer
 from rating.serializers import RatingSerializer
 from account.serializers import PublicUserSerializer
 from .models import Test, Question, SolvedTest, SolvedQuestion
@@ -31,12 +33,19 @@ class TestSerializer(RatingSerializer, ModelSerializer):
 
 	user = PublicUserSerializer()
 	questions = QuestionSerializer(many=True)
+	is_protected = SerializerMethodField()
 
 	class Meta:
 		model = Test
 		fields = ['id', 'user', 'title', 'description', 'image',
 				  'date_created', 'questions', 'is_private', 'need_auth',
-				  'rating', 'is_liked_user', 'is_disliked_user']
+				  'rating', 'is_liked_user', 'is_disliked_user', 'is_protected']
+
+	def get_is_protected(self, obj):
+		for tag in obj.tags.all():
+			if tag.tag == 'домашка':
+				return True
+		return False
 
 
 class CreateTestSerializer(ModelSerializer):
@@ -46,6 +55,43 @@ class CreateTestSerializer(ModelSerializer):
 		model = Test
 		fields = ['title', 'description', 'image',
 				  'questions', 'is_private', 'need_auth', 'tags']
+
+
+class UpdateQuestionSerializer(ModelSerializer):
+	"""Serializer for updating question"""
+
+	answer_options = SerializerMethodField()
+
+	class Meta:
+		model = Question
+		fields = ['condition', 'answer', 'answer_type', 'answer_options']
+
+	def get_answer_options(self, obj):
+		return obj.answer_options.split('$&$;')
+
+
+class UpdateTestSerializer(ModelSerializer):
+	"""Serializer for updating test"""
+
+	questions = UpdateQuestionSerializer(many=True, read_only=True)
+	tags = TagSerializer(many=True)
+
+	class Meta:
+		model = Test
+		fields = ['title', 'description', 'image', 'questions',
+				  'is_private', 'need_auth', 'tags']
+		read_only_fields = ['tags']
+
+	def update(self, instanse, validated_data):
+		tags = validated_data.get('tags')
+
+		if tags or tags == []:
+			instanse.tags.clear()
+			for tag in tags:
+				instanse.tags.add(Tag.objects.get(tag=tag['tag']))
+			del validated_data['tags']
+
+		return super().update(instanse, validated_data)
 
 
 class OwnTestSerializer(ModelSerializer):
