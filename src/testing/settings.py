@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
 
     'rest_framework',
     'corsheaders',
@@ -155,5 +156,18 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'account.authentication.Authentication',
+    ],
+}
+
+
+# Sitemap settings
+
+SITEMAP_URLS = {
+    'TESTS': '/tests/:id/',
+    'USERS': '/users/:username/',
+    'OTHER': [
+        '/',
+        '/login/',
+        '/register/',
     ],
 }
