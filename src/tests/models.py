@@ -5,10 +5,9 @@ from account.models import User
 from rating.models import RatingModel
 
 
-ANSWER_TYPE = [
+ANSWER_TYPES = [
 	('TEXT', 'text'),
 	('NUMBER', 'number'),
-	('CHECKBOXES', 'checkboxes'),
 	('RADIOS', 'radios'),
 ]
 
@@ -19,36 +18,10 @@ class Question(models.Model):
 	condition = models.TextField()
 	answer = models.CharField(max_length=100)
 	answer_options = models.CharField(max_length=1000, null=True, blank=True)
-	answer_type = models.CharField(max_length=10, choices=ANSWER_TYPE,
-								   default='TEXT')
+	answer_type = models.CharField(max_length=10, choices=ANSWER_TYPES, default='TEXT')
 
 	def __str__(self):
 		return self.condition[:30]
-
-
-class Test(RatingModel, models.Model):
-	"""Model of test"""
-
-	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tests')
-	title = models.CharField(max_length=100)
-	description = models.TextField(null=True, blank=True)
-	image = models.ImageField(null=True, blank=True, upload_to='%Y/%m/%d/tests/')
-	questions = models.ManyToManyField(Question, related_name='test')
-	solutions = models.IntegerField(default=0)
-	date_created = models.DateTimeField(auto_now_add=True)
-	is_private = models.BooleanField(default=False)
-	need_auth = models.BooleanField(default=True)
-	tags = models.ManyToManyField(Tag, blank=True, related_name='tests')
-
-	class Meta:
-		ordering = ['-date_created']
-
-	def __str__(self):
-		return self.title
-
-	def add_solution(self):
-		self.solutions += 1
-		self.save()
 
 
 class SolvedQuestion(models.Model):
@@ -61,19 +34,38 @@ class SolvedQuestion(models.Model):
 		return self.user_answer
 
 
-class SolvedTest(models.Model):
-	"""Model of solved test"""
+class Test(RatingModel, models.Model):
+	"""Model of test"""
 
-	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solved_tests')
-	test_id = models.IntegerField()
+	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tests')
 	title = models.CharField(max_length=100)
-	answers = models.ManyToManyField(SolvedQuestion)
-	right_answers = models.IntegerField(default=0)
-	start_date = models.DateTimeField()
-	end_date = models.DateTimeField()
+	description = models.TextField(null=True, blank=True)
+	image = models.ImageField(null=True, blank=True, upload_to='%Y/%m/%d/tests/')
+	questions = models.ManyToManyField(Question, related_name='test')
+	date_created = models.DateTimeField(auto_now_add=True)
+	is_private = models.BooleanField(default=False)
+	needs_auth = models.BooleanField(default=True)
+	tags = models.ManyToManyField(Tag, blank=True, related_name='tests')
+
+	class Meta:
+		ordering = ['-date_created']
 
 	def __str__(self):
 		return self.title
 
+
+class SolvedTest(models.Model):
+	"""Model of solved test"""
+
+	user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='solved_tests')
+	test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='solutions')
+	answers = models.ManyToManyField(SolvedQuestion)
+	right_answers = models.IntegerField(default=0)
+	date_started = models.DateTimeField()
+	date_ended = models.DateTimeField()
+
+	def __str__(self):
+		return self.test.title
+
 	class Meta:
-		ordering = ['-end_date']
+		ordering = ['-date_ended']

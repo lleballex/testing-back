@@ -3,14 +3,14 @@ from django.urls import path
 from .views import LikeView, DislikeView
 from .views import OwnTestsView, OwnTestView
 from .views import SolvedTestsView, SolvedTestView
-from .views import TestsView, TestView, TestInfoView, CheckAnswersView
+from .views import TestsView, TestView, TestInfoView, SolveTestView
 
 
 urlpatterns = [
 	path('', TestsView.as_view(), name='tests'),
 	path('<int:id>/', TestView.as_view(), name='test'),
 	path('<int:id>/info/', TestInfoView.as_view(), name='test_info'),
-	path('<int:id>/check_answers/', CheckAnswersView.as_view(), name='check_answers'),
+	path('<int:id>/check_answers/', SolveTestView.as_view()),
 	path('<int:id>/like/', LikeView.as_view(), name='like'),
 	path('<int:id>/dislike/', DislikeView.as_view(), name='dislike'),
 	path('solved/', SolvedTestsView.as_view(), name='solved_tests'),

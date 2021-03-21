@@ -1,11 +1,11 @@
 from django.http import Http404
 from rest_framework import mixins
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import SAFE_METHODS
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 
 from .models import Test
 from core.mixins import BaseAPIView
@@ -15,19 +15,19 @@ from .models import SolvedTest, SolvedQuestion
 from core.permissions import IsOwnerOrReadOnly
 from .permissions import UnsolvedTestsPermission
 from rating.mixins import LikeMixin, DislikeMixin
-from .serializers import TestSerializer, BaseTestInfoSerializer
+from .serializers import TestSerializer, BaseTestSerializer
 from .serializers import OwnTestSerializer, TestSolutionSerializer
-from .serializers import SolvedTestSerializer, SolvedTestsSerializer
-from .serializers import CreateQuestionSerializer, CreateTestSerializer
+from .serializers import SolvedTestSerializer, OwnTestSolutionSerializer
 
 from datetime import datetime
 
 
-class TestsView(mixins.ListModelMixin, GenericAPIView):
+class TestsView(mixins.ListModelMixin, mixins.CreateModelMixin,
+				GenericAPIView):
 	"""Getting a list of tests and creating a new one"""
 
 	queryset = Test.objects.filter(is_private=False)
-	serializer_class = BaseTestInfoSerializer
+	serializer_class = BaseTestSerializer
 	permission_classes = [IsAuthenticatedOrReadOnly]
 
 	def get(self, request):
@@ -38,7 +38,7 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 		tags = request.query_params.get('tags')
 		if tags:
 			for tag in tags.split(','):
-				self.queryset = self.queryset.filter(tags__id=int(tag))
+				self.queryset = self.queryset.filter(tags__tag=tag)
 
 		sorting = request.query_params.get('sorting')
 		if sorting and sorting == 'old':
@@ -47,39 +47,22 @@ class TestsView(mixins.ListModelMixin, GenericAPIView):
 		return self.list(request)
 
 	def post(self, request):
-		for i in range(len(request.data['questions'])):
-			answer_options = ''
-			for answer in request.data['questions'][i]['answer_options']:
-				answer_options += answer + '$&$;'
-			answer_options = answer_options[:len(answer_options) - 4]
-			request.data['questions'][i]['answer_options'] = answer_options
-
-		question_serializer = CreateQuestionSerializer(data=request.data['questions'],
-													   many=True)
-		if not question_serializer.is_valid():
-			return Response(question_serializer.errors, status=400)
-		question_serializer.save()
-
-		questions = []
-		for question in question_serializer.data:
-			questions.append(question['id'])
-		request.data['questions'] = questions
-
 		if request.data.get('image'):
 			request.data['image'] = get_image_from_str(request.data['image'])
+		return self.create(request)
 
-		test_serializer = CreateTestSerializer(data=request.data)
+	def perform_create(self, serializer):
+		serializer.save(user=self.request.user)
 
-		if not test_serializer.is_valid():
-			return Response(test_serializer.errors, status=400)
-		test_serializer.save(user=request.user)
-
-		return Response(test_serializer.data, status=201)
+	def get_serializer_class(self):
+		if self.request.method in SAFE_METHODS:
+			return BaseTestSerializer
+		return UpdateTestSerializer
 
 
 class TestView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 			   mixins.DestroyModelMixin, BaseAPIView):
-	"""Getting and deleting a test"""
+	"""Getting, updating and deleting a test"""
 
 	queryset = Test.objects.all()
 	lookup_field = 'id'
@@ -109,15 +92,15 @@ class TestInfoView(mixins.RetrieveModelMixin, BaseAPIView):
 	"""Getting base info about test"""
 
 	queryset = Test.objects.all()
-	serializer_class = BaseTestInfoSerializer
+	serializer_class = BaseTestSerializer
 	lookup_field = 'id'
 
 	def get(self, request, *args, **kwargs):
 		return self.retrieve(request, *args, **kwargs)
 
 
-class CheckAnswersView(APIView):
-	"""Checking test answers"""
+class SolveTestView(GenericAPIView):
+	"""Solving a test"""
 
 	def post(self, request, id):
 		try:
@@ -125,32 +108,29 @@ class CheckAnswersView(APIView):
 		except Test.DoesNotExist:
 			raise Http404
 
-		if test.need_auth and not request.user.is_authenticated:
+		if test.needs_auth and not request.user.is_authenticated:
 			raise PermissionDenied
 
-		right_answers = 0
-		start_date = datetime.fromtimestamp(request.data['start_date'] / 1000.0)
-		end_date = datetime.fromtimestamp(request.data['end_date'] / 1000.0)
-		solved_test = SolvedTest.objects.create(user=request.user,
-												test_id=test.id,
-												title=test.title,
-												start_date=start_date,
-												end_date=end_date)
+		date_started = datetime.fromtimestamp(request.data['start_date'] / 1000.0)
+		date_ended = datetime.fromtimestamp(request.data['end_date'] / 1000.0)
+		
+		solved_test = SolvedTest.objects.create(test=test,
+												date_started=date_started,
+								 				date_ended=date_ended)
+
+		if request.user.is_authenticated: solved_test.user = request.user
 
 		for i in range(len(test.questions.all())):
 			if test.questions.all()[i].answer == request.data['answers'][i]:
-				right_answers += 1
+				solved_test.right_answers += 1
 
 			solved_test.answers.add(SolvedQuestion.objects.create(
-				user_answer = request.data['answers'][i],
-				right_answer = test.questions.all()[i].answer
+				user_answer=request.data['answers'][i],
+				right_answer=test.questions.all()[i].answer,
 			))
 
-		solved_test.right_answers = right_answers
 		solved_test.save()
-		test.add_solution()
-
-		return Response(solved_test.id)
+		return Response(solved_test.id, status=201)
 
 
 class LikeView(LikeMixin):
@@ -163,67 +143,62 @@ class DislikeView(DislikeMixin):
 	lookup_field = 'id'
 
 
-class SolvedTestsView(APIView):
+class SolvedTestsView(mixins.ListModelMixin, GenericAPIView):
 	"""Getting a list of solved tests"""
 
+	serializer_class = SolvedTestSerializer
+	permission_classes = [IsAuthenticated]
+
 	def get(self, request):
-		if not request.user.is_authenticated:
-			raise NotAuthenticated
+		return self.list(request)
 
-		serializer = SolvedTestsSerializer(request.user.solved_tests, many=True)
-		return Response(serializer.data)
+	def get_queryset(self):
+		return self.request.user.solved_tests
 
 
-class SolvedTestView(BaseAPIView):
-	"""Getting solved test by id"""
+class SolvedTestView(mixins.RetrieveModelMixin, BaseAPIView):
+	"""Getting solved test"""
+
+	serializer_class = OwnTestSolutionSerializer
+	permission_classes = [IsAuthenticated]
+	lookup_field = 'id'
 
 	def get(self, request, id):
-		if not request.user.is_authenticated:
-			raise NotAuthenticated
+		return self.retrieve(id)
 
-		try:
-			test = SolvedTest.objects.get(id=id)
-		except SolvedTest.DoesNotExist:
-			raise Http404
-
-		if not test.user == request.user:
-			raise PermissionDenied
-
-		serializer = SolvedTestSerializer(test)
-		return Response(serializer.data)
+	def get_queryset(self):
+		return self.request.user.solved_tests
 
 
-class OwnTestsView(APIView):
+class OwnTestsView(mixins.ListModelMixin, GenericAPIView):
 	"""Getting a list of own tests"""
 
+	serializer_class = OwnTestSerializer
+	permission_classes = [IsAuthenticated]
+
 	def get(self, request):
-		if not request.user.is_authenticated:
-			raise NotAuthenticated
+		return self.list(request)
 
-		serializer = OwnTestSerializer(request.user.tests, many=True)
-		return Response(serializer.data)
+	def get_queryset(self):
+		return self.request.user.tests
 
 
-class OwnTestView(APIView):
+class OwnTestView(GenericAPIView):
 	"""Getting solutions of own test"""
 
+	permission_classes = [IsAuthenticated]
+	lookup_field = 'id'
+
 	def get(self, request, id):
-		if not request.user.is_authenticated:
-			raise NotAuthenticated
-
-		try:
-			test = Test.objects.get(id=id)
-		except Test.DoesNotExist:
-			raise Http404
-
-		if not test.user == request.user:
-			raise PermissionDenied
-
-		serializer = TestSolutionSerializer(SolvedTest.objects.filter(test_id=test.id),
-											many=True)
+		test = self.get_object()
+		serializer = TestSolutionSerializer(test.solutions, many=True)
+		
 		return Response({
 			'title': test.title,
 			'rating': test.rating,
 			'date_created': test.date_created.strftime('%d.%m.%y %H:%M'),
 			'solutions': serializer.data,
 		})
+
+	def get_queryset(self):
+		return self.request.user.tests
