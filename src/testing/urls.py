@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/account/', include('account.urls')),
     path('api/tests/', include('tests.urls')),
     path('api/tags/', include('tags.urls')),
+    path('api/notifications/', include('notifications.urls')),
 
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

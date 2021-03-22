@@ -3,23 +3,10 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 
 
-'''class User(AbstractUser):
-	"""Model of user"""
-
-	email = models.EmailField(unique=True)
-	#first_name = models.CharField(max_length=30, null=True, blank=True)
-	#last_name = models.CharField(max_length=30, null=True, blank=True)
-
-	class Meta:
-		ordering = ['-date_joined']'''
-
-
 class UserManager(BaseUserManager):
 	"""Custom user manager"""
 
 	def create_user(self, username, email, password):
-		print('create user')
-
 		if not username:
 			raise ValueError('User must have username')
 		if not email:

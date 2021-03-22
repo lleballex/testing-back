@@ -89,6 +89,7 @@ class GetTokenView(APIView):
 
 		return Response({
 			'token': encode_auth_token(user.id),
+			'has_notifications': bool(user.notifications.filter(is_readed=False)),
 			'username': user.username,
 		})
 
@@ -110,4 +111,7 @@ class CheckTokenView(APIView):
 		except User.DoesNotExist:
 			return Response({'detail': 'Token is invalid'}, status=400)
 
-		return Response(user.username)
+		return Response({
+			'username': user.username,
+			'has_notifications': bool(user.notifications.filter(is_readed=False)),
+		})

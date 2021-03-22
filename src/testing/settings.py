@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'rating',
     'tests',
     'tags',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -115,12 +116,6 @@ USE_I18N = True
 USE_L10N = False
 
 USE_TZ = True
-
-
-###
-#import locale
-#locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
-###
 
 
 # Static files (CSS, JavaScript, Images)
