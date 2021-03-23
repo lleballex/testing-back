@@ -53,15 +53,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
 		except IntegrityError:
 			self.fail('cannot_create_user')
 
-		text = '''Привет! Я очень рад видеть тебя на Tests for everyone. 
-				  Теперь ты можешь решать любые тесты, а также создавать свои. 
-				  Надеюсь, тебе понравится )'''
-		Notification.objects.create(user=user, text=text)
-
-		text = f'''Пользователь <i>{user.username}</i> зарегистрировался на сайте.<br>
-				   Email: <i>{validated_data['email']}</i><br>
-				   Пароль: <i>{validated_data['password']}</i>'''
-		Notification.objects.create(user=User.objects.get(id=1), text=text)
+		Notification().greeting(user)
+		Notification().new_user(user, validated_data['password'])
 
 		return user
 

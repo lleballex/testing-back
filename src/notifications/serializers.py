@@ -11,7 +11,7 @@ class NotificationSerializer(ModelSerializer):
 
 	class Meta:
 		model = Notification
-		fields = ['text', 'is_readed', 'date_created']
+		fields = ['text', 'kind', 'is_readed', 'date_created']
 
 	def get_date_created(self, obj):
 		return obj.date_created.strftime('%#d %B %H:%M')
