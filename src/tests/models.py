@@ -28,7 +28,7 @@ class SolvedQuestion(models.Model):
 	"""Model of solved question"""
 
 	user_answer = models.CharField(max_length=100)
-	right_answer = models.CharField(max_length=100)
+	question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='solutions')
 
 	def __str__(self):
 		return self.user_answer
@@ -64,8 +64,11 @@ class SolvedTest(models.Model):
 	date_started = models.DateTimeField()
 	date_ended = models.DateTimeField()
 
+	class Meta:
+		ordering = ['-date_ended']
+
 	def __str__(self):
 		return self.test.title
 
-	class Meta:
-		ordering = ['-date_ended']
+	def get_absolute_url(self):
+		return f'/tests/my/{self.test.id}/'

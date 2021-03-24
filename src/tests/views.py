@@ -11,6 +11,7 @@ from .models import Test
 from core.mixins import BaseAPIView
 from core.utils import get_image_from_str
 from .serializers import UpdateTestSerializer
+from notifications.models import Notification
 from .models import SolvedTest, SolvedQuestion
 from core.permissions import IsOwnerOrReadOnly
 from .permissions import UnsolvedTestsPermission
@@ -126,10 +127,12 @@ class SolveTestView(GenericAPIView):
 
 			solved_test.answers.add(SolvedQuestion.objects.create(
 				user_answer=request.data['answers'][i],
-				right_answer=test.questions.all()[i].answer,
+				question=test.questions.all()[i],
 			))
 
 		solved_test.save()
+		Notification().new_solution(solved_test)
+
 		return Response(solved_test.id, status=201)
 
 
