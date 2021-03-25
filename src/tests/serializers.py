@@ -44,13 +44,17 @@ class SolvedQuestionSerializer(ModelSerializer):
 	"""Serializer of solved question"""
 
 	right_answer = SerializerMethodField()
+	condition = SerializerMethodField()
 
 	class Meta:
 		model = SolvedQuestion
-		fields = ['user_answer', 'right_answer']
+		fields = ['user_answer', 'right_answer', 'condition']
 
 	def get_right_answer(self, obj):
 		return obj.question.answer
+
+	def get_condition(self, obj):
+		return obj.question.condition
 
 
 class TestSerializer(RatingSerializer, ModelSerializer):
