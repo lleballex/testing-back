@@ -115,9 +115,9 @@ class UpdateTestSerializer(TagsSerializer, ModelSerializer):
 
 	def create(self, validated_data):
 		questions_data = validated_data['questions']
-		tags_data = validated_data['tags']
+		tags_data = validated_data.get('tags', [])
 		del validated_data['questions']
-		del validated_data['tags']
+		if tags_data: del validated_data['tags']
 
 		instanse = super().create(validated_data)
 
