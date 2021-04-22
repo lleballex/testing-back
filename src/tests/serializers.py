@@ -154,16 +154,19 @@ class OwnTestSerializer(TagsSerializer, ModelSerializer):
 		return obj.date_created.strftime('%d.%m.%y %H:%M')
 
 
-class SolvedTestSerializer(ModelSerializer):
+class SolvedTestSerializer(TagsSerializer, ModelSerializer):
 	"""Serializer of solved test (base info about solved test)"""
 
 	answers = SerializerMethodField()
 	title = SerializerMethodField()
 	test_id = SerializerMethodField()
+	image = SerializerMethodField()
 
 	class Meta:
 		model = SolvedTest
-		fields = ['id', 'test_id', 'title', 'answers', 'right_answers']
+		fields = ['id', 'test_id', 'title', 'answers', 'right_answers',
+				  'image', 'tags']
+		# remove test_id (used in old version)
 
 	def get_answers(self, obj):
 		return obj.answers.count();
@@ -174,8 +177,16 @@ class SolvedTestSerializer(ModelSerializer):
 	def get_test_id(self, obj):
 		return obj.test.id
 
+	def get_image(self, obj):
+		if obj.test.image:
+			return obj.test.image.url
+		return None
 
-class OwnTestSolutionSerializer(ModelSerializer):
+	def get_tags(self, obj):
+		return super().get_tags(obj.test)
+
+
+class OwnTestSolutionSerializer(TagsSerializer, ModelSerializer):
 	"""Serializer of own test solution"""
 
 	answers = SolvedQuestionSerializer(many=True)
