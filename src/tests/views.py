@@ -20,6 +20,8 @@ from .serializers import TestSerializer, BaseTestSerializer
 from .serializers import OwnTestSerializer, TestSolutionSerializer
 from .serializers import SolvedTestSerializer, OwnTestSolutionSerializer
 
+from .serializers import FullQuestionSerializer
+
 from datetime import datetime
 
 
@@ -201,6 +203,7 @@ class OwnTestView(GenericAPIView):
 			'rating': test.rating,
 			'date_created': test.date_created.strftime('%d.%m.%y %H:%M'),
 			'solutions': serializer.data,
+			'questions': FullQuestionSerializer(test.questions, many=True).data,
 		})
 
 	def get_queryset(self):
