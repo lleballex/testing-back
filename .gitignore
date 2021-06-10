@@ -3,6 +3,3 @@ __pycache__/
 
 /src/static/
 /src/media/
-
-db.sqlite3
-db.sqlite3-journal
