@@ -13,31 +13,17 @@ from .models import Question, SolvedQuestion, Test, SolvedTest
 class QuestionSerializer(ModelSerializer):
 	"""Serializer of question"""
 
-	answer_options = SerializerMethodField()
-
 	class Meta:
 		model = Question
 		fields = ['condition', 'answer_options', 'answer_type']
-
-	def get_answer_options(self, obj):
-		return obj.answer_options.split('$&$;')
 
 
 class FullQuestionSerializer(ModelSerializer):
 	"""Serializer with all question fields"""
 
-	answer_options = WriteSerializerMethodField()
-
 	class Meta:
 		model = Question
 		fields = ['id', 'condition', 'answer', 'answer_options', 'answer_type']
-
-	def get_answer_options(self, obj):
-		return obj.answer_options.split('$&$;')
-
-	def get_data_answer_options(self, data):
-		if type(data) == str: return data
-		return '$&$;'.join(data)
 
 
 class SolvedQuestionSerializer(ModelSerializer):
@@ -119,12 +105,16 @@ class UpdateTestSerializer(TagsSerializer, ModelSerializer):
 		del validated_data['questions']
 		if tags_data: del validated_data['tags']
 
+		print(questions_data)
+
 		instanse = super().create(validated_data)
 
 		questions_serializer = FullQuestionSerializer(data=questions_data,
 													  many=True)
 		questions_serializer.is_valid(raise_exception=True)
 		questions_serializer.save()
+
+		print(questions_data)
 
 		for question in questions_serializer.data:
 			instanse.questions.add(Question.objects.get(id=question['id']))

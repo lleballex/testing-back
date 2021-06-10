@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 from tags.models import Tag
 from account.models import User
@@ -17,7 +18,7 @@ class Question(models.Model):
 
 	condition = models.TextField()
 	answer = models.CharField(max_length=100)
-	answer_options = models.CharField(max_length=1000, null=True, blank=True)
+	answer_options = ArrayField(models.CharField(max_length=500), blank=True)
 	answer_type = models.CharField(max_length=10, choices=ANSWER_TYPES, default='TEXT')
 
 	def __str__(self):
