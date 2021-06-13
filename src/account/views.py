@@ -1,5 +1,6 @@
 from django.http import Http404
 from rest_framework import mixins
+from django.db.models import Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
@@ -15,10 +16,25 @@ from .serializers import UserTestSerializer, PrivateUserSerializer
 from .serializers import PublicUserSerializer, CreateUserSerializer
 
 
-class UsersView(mixins.CreateModelMixin, GenericAPIView):
+class UsersView(mixins.ListModelMixin, mixins.CreateModelMixin, GenericAPIView):
 	"""Getting a list of all users"""
 
 	queryset = User.objects.all()
+
+	def get(self, request):
+		query = request.query_params.get('query')
+		sorting = request.query_params.get('sorting')
+
+		if sorting == 'solutions': sorting = 'solved_tests'
+		elif sorting != 'tests': sorting = '' 
+
+		if query:
+			self.queryset = self.queryset.filter(username__icontains=query)
+
+		if sorting:
+			self.queryset = self.queryset.annotate(count=Count(sorting)).order_by('-count')
+
+		return self.list(request)
 
 	def post(self, request):
 		return self.create(request)
