@@ -11,9 +11,18 @@ from notifications.models import Notification
 class PublicUserSerializer(serializers.ModelSerializer):
 	"""Serializer for User model with only public fields"""
 
+	tests = serializers.SerializerMethodField()
+	solutions = serializers.SerializerMethodField()
+
 	class Meta:
 		model = User
-		fields = ['username', 'first_name', 'last_name']
+		fields = ['username', 'first_name', 'last_name', 'tests', 'solutions']
+
+	def get_tests(self, obj):
+		return obj.tests.count()
+
+	def get_solutions(self, obj):
+		return obj.solved_tests.count()
 
 
 class PrivateUserSerializer(serializers.ModelSerializer):
