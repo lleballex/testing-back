@@ -72,7 +72,20 @@ class TestView(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 	permission_classes = [UnsolvedTestsPermission, IsOwnerOrReadOnly]
 
 	def get(self, request, id):
-		return self.retrieve(request, id)
+		instance = self.get_object()
+
+		if instance.needs_auth and not request.user.is_authenticated:
+			return Response({
+				'detail': 'Authorization required',
+				'test': {
+					'title': instance.title,
+					'description': instance.description,
+					'image': instance.get_image_url(),
+				}
+			}, status=403)
+
+		serializer = self.get_serializer(instance)
+		return Response(serializer.data)
 
 	def post(self, request, id):
 		return self.retrieve(request, id)
