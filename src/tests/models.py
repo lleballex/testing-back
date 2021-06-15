@@ -54,6 +54,11 @@ class Test(RatingModel, models.Model):
 	def __str__(self):
 		return self.title
 
+	def get_image_url(self):
+		if not self.image:
+			return ''
+		return f'http://testsforeveryone.ru{self.image.url}'
+
 
 class SolvedTest(models.Model):
 	"""Model of solved test"""
